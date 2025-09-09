@@ -4,8 +4,6 @@ import joblib
 
 # --- Load trained XGBoost model ---
 model = joblib.load("fraud_xgb_model.pkl")
-st.write("Model expects features:", model.get_booster().feature_names)
-st.write("User data features:", list(user_data.columns))
 
 st.title("Fraud Detection App")
 
@@ -20,29 +18,33 @@ newbalanceDest = st.number_input("New Balance (Destination)", min_value=0.0, ste
 transaction_type = st.selectbox("Transaction Type", ["TRANSFER (0)", "CASH_OUT (1)"])
 type_value = 0 if "TRANSFER" in transaction_type else 1
 
-# --- Define feature order (must match training) ---
+# --- Define feature order (exactly as model expects) ---
 FEATURES = [
+    "type",
     "amount",
     "oldbalanceOrg",
     "newbalanceOrig",
     "oldbalanceDest",
     "newbalanceDest",
-    "type",
     "errorbalanceDest",
     "errorbalanceOrig"
 ]
 
-# --- Build input DataFrame with engineered features ---
+# --- Build input DataFrame ---
 user_data = pd.DataFrame([{
+    "type": type_value,
     "amount": amount,
     "oldbalanceOrg": oldbalanceOrg,
     "newbalanceOrig": newbalanceOrig,
     "oldbalanceDest": oldbalanceDest,
     "newbalanceDest": newbalanceDest,
-    "type": type_value,
     "errorbalanceDest": oldbalanceDest + amount - newbalanceDest,
     "errorbalanceOrig": newbalanceOrig + amount - oldbalanceOrg
-}])[FEATURES]  # enforce order + names
+}])[FEATURES]  # enforce names + order
+
+# --- Debug (optional) ---
+# st.write("Model expects:", model.get_booster().feature_names)
+# st.write("User data columns:", list(user_data.columns))
 
 # --- Prediction ---
 if st.button("Predict Fraud"):
@@ -52,4 +54,3 @@ if st.button("Predict Fraud"):
         st.error("🚨 Fraud Detected")
     else:
         st.success("✅ Not Fraudulent")
-
