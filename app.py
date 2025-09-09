@@ -4,6 +4,8 @@ import joblib
 
 # --- Load trained XGBoost model ---
 model = joblib.load("fraud_xgb_model.pkl")
+st.write("Model expects features:", model.get_booster().feature_names)
+st.write("User data features:", list(user_data.columns))
 
 st.title("Fraud Detection App")
 
