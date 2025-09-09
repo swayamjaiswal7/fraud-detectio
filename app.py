@@ -2,11 +2,10 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# Load trained XGBoost model
+# --- Load trained XGBoost model ---
 model = joblib.load("fraud_xgb_model.pkl")
 
-st.title("Fraud Detection with XGBoost")
-
+st.title("Fraud Detection App")
 
 # --- User Inputs ---
 amount = st.number_input("Transaction Amount", min_value=0.0, step=100.0)
@@ -15,11 +14,11 @@ newbalanceOrig = st.number_input("New Balance (Origin)", min_value=0.0, step=100
 oldbalanceDest = st.number_input("Old Balance (Destination)", min_value=0.0, step=100.0)
 newbalanceDest = st.number_input("New Balance (Destination)", min_value=0.0, step=100.0)
 
-# Transaction type (0 = TRANSFER, 1 = CASH_OUT)
+# Encode transaction type: TRANSFER=0, CASH_OUT=1
 transaction_type = st.selectbox("Transaction Type", ["TRANSFER (0)", "CASH_OUT (1)"])
 type_value = 0 if "TRANSFER" in transaction_type else 1
 
-# --- Build input DataFrame (one step with engineered features) ---
+# --- Define feature order (must match training) ---
 FEATURES = [
     "amount",
     "oldbalanceOrg",
@@ -31,6 +30,7 @@ FEATURES = [
     "errorbalanceOrig"
 ]
 
+# --- Build input DataFrame with engineered features ---
 user_data = pd.DataFrame([{
     "amount": amount,
     "oldbalanceOrg": oldbalanceOrg,
@@ -40,13 +40,14 @@ user_data = pd.DataFrame([{
     "type": type_value,
     "errorbalanceDest": oldbalanceDest + amount - newbalanceDest,
     "errorbalanceOrig": newbalanceOrig + amount - oldbalanceOrg
-}])[FEATURES]  # enforce order
+}])[FEATURES]  # enforce order + names
 
-# --- Predict ---
-prediction = model.predict(user_data)[0]
+# --- Prediction ---
+if st.button("Predict Fraud"):
+    prediction = model.predict(user_data)[0]
 
-# --- Display results ---
-if prediction == 1:
-    st.error("🚨 Fraud Detected")
-else:
-    st.success("✅ Not Fraudulent")
+    if prediction == 1:
+        st.error("🚨 Fraud Detected")
+    else:
+        st.success("✅ Not Fraudulent")
+
