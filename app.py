@@ -53,4 +53,4 @@ if st.button("Predict Fraud"):
     if prediction == 1:
         st.error("🚨 Fraud Detected")
     else:
-        st.success("✅ Not Fraudulent")
+        st.success("✅ The transaction is legit", prediction)
